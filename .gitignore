@@ -9,4 +9,4 @@ yarn-error.log
 .env
 .idea
 .npmrc
-.package-lock.json
+package-lock.json
