@@ -11,7 +11,8 @@
       "Bash(railway:*)",
       "Bash(curl:*)",
       "Bash(rm:*)",
-      "Bash(npm install)"
+      "Bash(npm install)",
+      "Bash(git push:*)"
     ],
     "deny": []
   }
