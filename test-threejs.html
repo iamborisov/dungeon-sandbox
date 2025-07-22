@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Three.js Loading Test</title>
+    <style>
+        body { font-family: Arial, sans-serif; padding: 20px; }
+        .test { margin: 10px 0; padding: 10px; border-radius: 5px; }
+        .pass { background-color: #d4edda; color: #155724; }
+        .fail { background-color: #f8d7da; color: #721c24; }
+        .loading { background-color: #fff3cd; color: #856404; }
+        #canvas { border: 1px solid #ccc; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Three.js CDN Loading Test</h1>
+    <div id="test-results"></div>
+    <canvas id="canvas" width="400" height="300"></canvas>
+
+    <!-- Test different CDN sources -->
+    <script id="threejs-script"></script>
+    
+    <script>
+        const results = document.getElementById('test-results');
+        
+        function addResult(test, status, message) {
+            const div = document.createElement('div');
+            div.className = `test ${status}`;
+            div.innerHTML = `<strong>${test}:</strong> ${message}`;
+            results.appendChild(div);
+        }
+        
+        function testCDN(url, name) {
+            return new Promise((resolve) => {
+                addResult(`Loading ${name}`, 'loading', 'Testing...');
+                
+                const script = document.createElement('script');
+                script.src = url;
+                
+                script.onload = () => {
+                    setTimeout(() => {
+                        if (typeof THREE !== 'undefined') {
+                            addResult(`${name} Load`, 'pass', `✅ THREE object available (version: ${THREE.REVISION})`);
+                            
+                            // Test basic Three.js functionality
+                            try {
+                                const scene = new THREE.Scene();
+                                const camera = new THREE.PerspectiveCamera(75, 1, 0.1, 1000);
+                                const renderer = new THREE.WebGLRenderer();
+                                
+                                addResult(`${name} Functionality`, 'pass', '✅ Basic objects created successfully');
+                                resolve({ success: true, url, name });
+                            } catch (error) {
+                                addResult(`${name} Functionality`, 'fail', `❌ Error creating objects: ${error.message}`);
+                                resolve({ success: false, url, name, error });
+                            }
+                        } else {
+                            addResult(`${name} Load`, 'fail', '❌ THREE object not available');
+                            resolve({ success: false, url, name, error: 'THREE not defined' });
+                        }
+                    }, 100);
+                };
+                
+                script.onerror = () => {
+                    addResult(`${name} Load`, 'fail', '❌ Script failed to load');
+                    resolve({ success: false, url, name, error: 'Script load failed' });
+                };
+                
+                document.head.appendChild(script);
+            });
+        }
+        
+        async function testAllCDNs() {
+            const cdns = [
+                {
+                    url: 'https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js',
+                    name: 'JSDelivr'
+                },
+                {
+                    url: 'https://unpkg.com/three@0.158.0/build/three.min.js',
+                    name: 'UNPKG'
+                },
+                {
+                    url: 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r158/three.min.js',
+                    name: 'CDNJS'
+                },
+                {
+                    url: 'https://threejs.org/build/three.min.js',
+                    name: 'Official'
+                }
+            ];
+            
+            for (const cdn of cdns) {
+                // Clear previous THREE if exists
+                if (typeof THREE !== 'undefined') {
+                    delete window.THREE;
+                }
+                
+                const result = await testCDN(cdn.url, cdn.name);
+                
+                if (result.success) {
+                    addResult('Recommended CDN', 'pass', `✅ Use: ${result.url}`);
+                    
+                    // Test OrbitControls with this CDN
+                    await testOrbitControls(result.name);
+                    break;
+                }
+                
+                // Wait before trying next CDN
+                await new Promise(resolve => setTimeout(resolve, 1000));
+            }
+        }
+        
+        async function testOrbitControls(cdnName) {
+            const controlsUrls = [
+                'https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js',
+                'https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js',
+                'https://threejs.org/examples/js/controls/OrbitControls.js'
+            ];
+            
+            for (const url of controlsUrls) {
+                try {
+                    addResult('OrbitControls Test', 'loading', `Testing ${url}`);
+                    
+                    const script = document.createElement('script');
+                    script.src = url;
+                    
+                    await new Promise((resolve, reject) => {
+                        script.onload = resolve;
+                        script.onerror = reject;
+                        document.head.appendChild(script);
+                    });
+                    
+                    // Wait a bit for script to execute
+                    await new Promise(resolve => setTimeout(resolve, 200));
+                    
+                    if (typeof THREE.OrbitControls !== 'undefined') {
+                        addResult('OrbitControls', 'pass', `✅ OrbitControls available from ${url}`);
+                        
+                        // Test creating OrbitControls
+                        const canvas = document.getElementById('canvas');
+                        const camera = new THREE.PerspectiveCamera();
+                        const controls = new THREE.OrbitControls(camera, canvas);
+                        
+                        addResult('OrbitControls Creation', 'pass', '✅ OrbitControls created successfully');
+                        return;
+                    }
+                } catch (error) {
+                    addResult('OrbitControls', 'fail', `❌ Failed to load from ${url}: ${error.message}`);
+                }
+            }
+        }
+        
+        // Start testing
+        testAllCDNs().catch(error => {
+            addResult('Test Suite', 'fail', `❌ Test suite error: ${error.message}`);
+        });
+    </script>
+</body>
+</html>

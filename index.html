@@ -8,10 +8,32 @@
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Three.js CDN -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
-    <!-- Three.js Controls -->
-    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Three.js CDN - Using proven working URLs -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Fallback verification -->
+    <script>
+        window.addEventListener('load', function() {
+            if (typeof THREE === 'undefined') {
+                console.error('THREE.js failed to load from primary CDN, trying fallback...');
+                
+                // Try fallback CDN
+                const fallbackScript = document.createElement('script');
+                fallbackScript.src = 'https://threejs.org/build/three.min.js';
+                fallbackScript.onload = function() {
+                    console.log('THREE.js loaded from fallback CDN');
+                    
+                    // Load controls from fallback
+                    const controlsScript = document.createElement('script');
+                    controlsScript.src = 'https://threejs.org/examples/js/controls/OrbitControls.js';
+                    document.head.appendChild(controlsScript);
+                };
+                document.head.appendChild(fallbackScript);
+            } else {
+                console.log('THREE.js loaded successfully, version:', THREE.REVISION);
+            }
+        });
+    </script>
     
     <style>
         :root {
@@ -602,9 +624,19 @@
             tg.MainButton.show();
         }
         
-        // Initialize when page loads
+        // Initialize when page loads - wait for THREE.js to be available
+        function waitForThreeJS() {
+            if (typeof THREE !== 'undefined') {
+                console.log('THREE.js is ready, initializing...');
+                initThreeJS();
+            } else {
+                console.log('Waiting for THREE.js to load...');
+                setTimeout(waitForThreeJS, 100);
+            }
+        }
+        
         window.addEventListener('load', () => {
-            setTimeout(initThreeJS, 100);
+            setTimeout(waitForThreeJS, 100);
         });
         
         // Handle page visibility changes for performance
