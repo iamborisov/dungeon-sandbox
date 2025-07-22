@@ -41,6 +41,25 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Webhook endpoint for Telegram bot (optional)
+app.post('/webhook', express.json(), (req, res) => {
+  const update = req.body;
+  
+  // Log bot interactions for analytics
+  if (update.message) {
+    console.log(`Bot message from user ${update.message.from.id}: ${update.message.text}`);
+    
+    // You can handle specific commands here
+    if (update.message.text === '/start') {
+      // User started the bot - track this event
+      console.log('User started the bot');
+    }
+  }
+  
+  // Always respond with 200 to acknowledge receipt
+  res.status(200).send('OK');
+});
+
 // Handle 404
 app.use((req, res) => {
   res.status(404).send('Not Found');

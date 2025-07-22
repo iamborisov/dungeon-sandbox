@@ -5,7 +5,13 @@
   "main": "server.js",
   "scripts": {
     "start": "node server.js",
-    "dev": "node server.js"
+    "dev": "node server.js",
+    "setup-bot": "node setup-bot.js",
+    "check-webhook": "node setup-bot.js check",
+    "deploy": "node deploy-railway.js",
+    "railway:login": "railway login",
+    "railway:logs": "railway logs",
+    "railway:domain": "railway domain"
   },
   "keywords": ["telegram", "mini-app", "gaussian-splats", "babylon.js", "3d"],
   "author": "",

@@ -18,10 +18,21 @@ npm start
 
 ## Telegram Mini App Setup
 
-1. Create a new bot with [@BotFather](https://t.me/botfather)
-2. Use `/newapp` command to create a mini app
-3. Set the Web App URL to your deployed server
-4. The app will automatically integrate with Telegram's theme and controls
+### Quick Setup:
+1. **See [TELEGRAM_SETUP.md](./TELEGRAM_SETUP.md) for detailed instructions**
+
+### Automated Setup:
+1. Copy `bot-config.example.js` to `bot-config.js`
+2. Fill in your bot token from [@BotFather](https://t.me/botfather)
+3. Run `npm run setup-bot` to configure automatically
+4. Use BotFather's `/newapp` to create the Mini App
+5. Set your deployed URL as the Web App URL
+
+### Manual Setup:
+1. Create bot with [@BotFather](https://t.me/botfather) → `/newbot`
+2. Create Mini App → `/newapp`
+3. Set Web App URL to your deployed server
+4. The app automatically integrates with Telegram's theme and controls
 
 ## Adding Real Gaussian Splat Files
 

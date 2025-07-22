@@ -1,0 +1,44 @@
+# Railway ignore file - files and folders to exclude from deployment
+
+# Development files
+README.md
+TELEGRAM_SETUP.md
+bot-config.example.js
+setup-bot.js
+
+# Git and IDE files
+.git/
+.gitignore
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+
+# Runtime files
+pids/
+*.pid
+*.seed
+
+# Coverage and test files
+coverage/
+.nyc_output/
+.jest/
+
+# Temporary files
+.tmp/
+temp/
+
+# Optional npm cache directory
+.npm
+
+# Optional REPL history
+.node_repl_history
