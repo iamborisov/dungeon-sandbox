@@ -2,31 +2,56 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Status
+## Project Overview
 
-This repository appears to be a new or empty project named "tgsplat". The directory currently contains only Claude Code configuration files.
+TGSplat is a Telegram mini app for viewing Gaussian splats using Babylon.js with mobile optimizations. The app integrates with Telegram's Web App API and provides touch-optimized 3D viewing capabilities.
 
-## Development Setup
+## Development Commands
 
-Since this is an empty repository, development commands and architecture will need to be established as the project grows.
+```bash
+# Install dependencies
+npm install
 
-## Project Structure
+# Start development server
+npm start
 
-The repository is currently minimal with only:
-- `.claude/` - Claude Code configuration directory
+# Access locally
+http://localhost:3000
+```
 
-## Getting Started
+## Architecture
 
-This appears to be a fresh project. Consider initializing it with:
-- Choose a programming language and framework
-- Set up build tools and dependency management
-- Create initial project structure
-- Add README.md with project description
+### Core Components
+- **server.js**: Express server with security middleware (helmet, compression)
+- **index.html**: Complete mini app with Telegram Web App integration and Babylon.js
+- **package.json**: Node.js dependencies for Express server
 
-## Future Development
+### Key Technologies
+- **Frontend**: Vanilla JavaScript with Babylon.js (CDN), Telegram Web App API
+- **Backend**: Express.js with compression and security headers
+- **3D Engine**: Babylon.js with mobile optimizations and touch controls
 
-Once the project structure is established, this CLAUDE.md should be updated to include:
-- Build and test commands
-- Project architecture overview
-- Development workflow
-- Key directories and their purposes
+### Telegram Integration
+- Automatic theme color adaptation from Telegram's theme parameters
+- MainButton status updates and BackButton handling
+- Full-screen expansion and haptic feedback
+- Optimized for Telegram's mobile webview environment
+
+### Mobile Optimizations
+- Hardware scaling reduction (0.7x) for performance
+- 30 FPS cap for battery preservation
+- Disabled anti-aliasing and unnecessary Babylon.js features
+- Touch-optimized ArcRotateCamera with inertia controls
+- WebGL support detection with fallback error handling
+
+## File Structure
+- `index.html` - Complete Telegram mini app (under 50KB)
+- `server.js` - Express server for hosting
+- `assets/` - Directory for .ply Gaussian splat files (to be added)
+- `README.md` - Setup and deployment instructions
+
+## Development Notes
+- Currently uses placeholder visualization (sphere with points)
+- Real .ply files can be loaded by replacing placeholder code around `index.html:340`
+- Mobile-first design with progressive enhancement
+- Offline-first architecture where possible

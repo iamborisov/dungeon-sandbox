@@ -1,0 +1,11 @@
+node_modules/
+npm-debug.log
+yarn-error.log
+.yarn/*
+.yarnrc
+.pnp.*
+.pnp.js
+.DS_Store
+.env
+.idea
+.npmrc

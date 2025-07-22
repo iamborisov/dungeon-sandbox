@@ -1,0 +1,21 @@
+{
+  "name": "telegram-gaussian-splat-viewer",
+  "version": "1.0.0",
+  "description": "Telegram mini app for viewing Gaussian splats with Babylon.js",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js"
+  },
+  "keywords": ["telegram", "mini-app", "gaussian-splats", "babylon.js", "3d"],
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "express": "^4.18.2",
+    "compression": "^1.7.4",
+    "helmet": "^7.1.0"
+  },
+  "engines": {
+    "node": ">=16.0.0"
+  }
+}

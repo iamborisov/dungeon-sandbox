@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Gaussian Splat Viewer</title>
+    
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Babylon.js CDN -->
+    <script src="https://cdn.babylonjs.com/babylon.js"></script>
+    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    
+    <style>
+        :root {
+            --tg-theme-bg-color: #ffffff;
+            --tg-theme-text-color: #000000;
+            --tg-theme-hint-color: #999999;
+            --tg-theme-link-color: #2481cc;
+            --tg-theme-button-color: #2481cc;
+            --tg-theme-button-text-color: #ffffff;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            background-color: var(--tg-theme-bg-color);
+            color: var(--tg-theme-text-color);
+            overflow: hidden;
+            height: 100vh;
+            touch-action: none;
+        }
+        
+        #renderCanvas {
+            width: 100vw;
+            height: 100vh;
+            display: block;
+            touch-action: none;
+            outline: none;
+        }
+        
+        #loadingOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--tg-theme-bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid var(--tg-theme-hint-color);
+            border-top: 4px solid var(--tg-theme-button-color);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-bottom: 16px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--tg-theme-text-color);
+            font-size: 16px;
+            margin-bottom: 8px;
+        }
+        
+        .loading-hint {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            text-align: center;
+            max-width: 280px;
+        }
+        
+        #errorOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: var(--tg-theme-bg-color);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1001;
+            padding: 20px;
+        }
+        
+        .error-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .error-title {
+            color: var(--tg-theme-text-color);
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-align: center;
+        }
+        
+        .error-message {
+            color: var(--tg-theme-hint-color);
+            font-size: 14px;
+            text-align: center;
+            line-height: 1.4;
+            max-width: 300px;
+        }
+        
+        .retry-button {
+            margin-top: 20px;
+            padding: 12px 24px;
+            background-color: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        .retry-button:active {
+            opacity: 0.8;
+        }
+        
+        #controls {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 12px;
+            padding: 12px;
+            display: none;
+            flex-direction: row;
+            justify-content: space-around;
+            z-index: 100;
+        }
+        
+        .control-button {
+            background: var(--tg-theme-button-color);
+            color: var(--tg-theme-button-text-color);
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 14px;
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        
+        .control-button:active {
+            opacity: 0.8;
+        }
+        
+        .hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading Gaussian Splat...</div>
+        <div class="loading-hint">Preparing 3D viewer for optimal mobile experience</div>
+    </div>
+    
+    <!-- Error Overlay -->
+    <div id="errorOverlay">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">Unable to Load Splat</div>
+        <div class="error-message" id="errorMessage">Your device may not support WebGL or the splat file couldn't be loaded.</div>
+        <button class="retry-button" onclick="retryLoading()">Try Again</button>
+    </div>
+    
+    <!-- Render Canvas -->
+    <canvas id="renderCanvas"></canvas>
+    
+    <!-- Controls -->
+    <div id="controls">
+        <button class="control-button" onclick="resetCamera()">Reset View</button>
+        <button class="control-button" onclick="toggleQuality()">Quality</button>
+    </div>
+    
+    <script>
+        // Telegram Web App initialization
+        let tg = window.Telegram?.WebApp;
+        
+        if (tg) {
+            tg.ready();
+            tg.expand();
+            tg.disableVerticalSwipes();
+            
+            // Apply Telegram theme colors
+            document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
+            document.documentElement.style.setProperty('--tg-theme-text-color', tg.themeParams.text_color || '#000000');
+            document.documentElement.style.setProperty('--tg-theme-hint-color', tg.themeParams.hint_color || '#999999');
+            document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
+            document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
+            
+            // Handle back button
+            tg.BackButton.onClick(() => {
+                tg.close();
+            });
+        }
+        
+        // Global variables
+        let engine, scene, camera, canvas, splatMesh;
+        let isLowQuality = false;
+        
+        // Mobile detection
+        const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                         window.innerWidth <= 768;
+        
+        // WebGL support check
+        function checkWebGLSupport() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                return !!gl;
+            } catch (e) {
+                return false;
+            }
+        }
+        
+        function showError(message) {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('errorMessage').textContent = message;
+            document.getElementById('errorOverlay').style.display = 'flex';
+            
+            if (tg) {
+                tg.MainButton.setText('Close App');
+                tg.MainButton.show();
+                tg.MainButton.onClick(() => tg.close());
+            }
+        }
+        
+        function hideLoading() {
+            document.getElementById('loadingOverlay').classList.add('hidden');
+            document.getElementById('controls').style.display = 'flex';
+            
+            if (tg) {
+                tg.MainButton.setText('Loaded Successfully');
+                tg.MainButton.color = '#4CAF50';
+                tg.MainButton.show();
+                setTimeout(() => tg.MainButton.hide(), 2000);
+            }
+        }
+        
+        function updateLoadingText(text) {
+            document.querySelector('.loading-text').textContent = text;
+        }
+        
+        async function initBabylonJS() {
+            try {
+                if (!checkWebGLSupport()) {
+                    throw new Error('WebGL is not supported on this device');
+                }
+                
+                canvas = document.getElementById('renderCanvas');
+                
+                // Create engine with mobile optimizations
+                engine = new BABYLON.Engine(canvas, true, {
+                    antialias: !isMobile,
+                    stencil: false,
+                    depth: true,
+                    alpha: false,
+                    premultipliedAlpha: false,
+                    preserveDrawingBuffer: false,
+                    powerPreference: "high-performance",
+                    doNotHandleContextLost: true,
+                    audioEngine: false
+                });
+                
+                // Mobile optimizations
+                if (isMobile) {
+                    engine.setHardwareScalingLevel(0.7);
+                    engine.setSize(window.innerWidth, window.innerHeight);
+                    isLowQuality = true;
+                }
+                
+                // Cap FPS for battery saving
+                engine.getFps = function() { return Math.min(30, this._fps); };
+                
+                updateLoadingText('Initializing 3D Scene...');
+                
+                // Create scene
+                scene = new BABYLON.Scene(engine);
+                scene.createDefaultCameraOrLights(true, false, true);
+                
+                // Configure scene for performance
+                scene.skipPointerMovePicking = true;
+                scene.skipPointerDownPicking = true;
+                scene.skipPointerUpPicking = true;
+                scene.autoClear = true;
+                scene.autoClearDepthAndStencil = true;
+                
+                // Setup camera
+                setupCamera();
+                
+                // Setup lighting
+                setupLighting();
+                
+                updateLoadingText('Loading Gaussian Splat Data...');
+                
+                // Load splat (placeholder for now)
+                await loadGaussianSplat();
+                
+                // Start render loop
+                engine.runRenderLoop(() => {
+                    if (scene && scene.activeCamera) {
+                        scene.render();
+                    }
+                });
+                
+                // Handle resize
+                window.addEventListener('resize', () => {
+                    engine.resize();
+                });
+                
+                hideLoading();
+                
+            } catch (error) {
+                console.error('Babylon.js initialization error:', error);
+                showError(error.message || 'Failed to initialize 3D viewer');
+            }
+        }
+        
+        function setupCamera() {
+            // Remove default camera
+            if (scene.activeCamera) {
+                scene.activeCamera.dispose();
+            }
+            
+            // Create arc rotate camera optimized for mobile
+            camera = new BABYLON.ArcRotateCamera(
+                "camera",
+                Math.PI / 4,
+                Math.PI / 3,
+                10,
+                BABYLON.Vector3.Zero(),
+                scene
+            );
+            
+            // Mobile-optimized camera settings
+            camera.setTarget(BABYLON.Vector3.Zero());
+            camera.attachControls(canvas, true);
+            camera.wheelPrecision = 50;
+            camera.pinchPrecision = 100;
+            camera.panningSensibility = 1000;
+            
+            // Limit camera movement
+            camera.lowerRadiusLimit = 2;
+            camera.upperRadiusLimit = 50;
+            camera.lowerBetaLimit = 0.1;
+            camera.upperBetaLimit = Math.PI - 0.1;
+            
+            // Smooth interactions
+            camera.inertialAlphaOffset = 0;
+            camera.inertialBetaOffset = 0;
+            camera.inertialRadiusOffset = 0;
+            
+            scene.activeCamera = camera;
+        }
+        
+        function setupLighting() {
+            // Remove default lights
+            scene.lights.forEach(light => light.dispose());
+            
+            // Simple hemisphere light for performance
+            const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
+            light.intensity = 1.0;
+            light.diffuse = new BABYLON.Color3(1, 1, 1);
+            light.specular = new BABYLON.Color3(0.2, 0.2, 0.2);
+        }
+        
+        async function loadGaussianSplat() {
+            try {
+                // TODO: Replace with actual .ply file loading
+                // For now, create a placeholder sphere with particle-like appearance
+                
+                updateLoadingText('Creating Splat Visualization...');
+                
+                // Create a sphere as placeholder for Gaussian splat
+                const sphere = BABYLON.MeshBuilder.CreateSphere("splatSphere", {
+                    diameter: 4,
+                    segments: 32
+                }, scene);
+                
+                // Create a material that mimics splat appearance
+                const material = new BABYLON.StandardMaterial("splatMaterial", scene);
+                material.diffuseColor = new BABYLON.Color3(0.8, 0.6, 0.4);
+                material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
+                material.roughness = 0.8;
+                
+                sphere.material = material;
+                splatMesh = sphere;
+                
+                // Add some fake "splat points" as smaller spheres
+                for (let i = 0; i < 50; i++) {
+                    const point = BABYLON.MeshBuilder.CreateSphere(`point${i}`, {
+                        diameter: 0.1
+                    }, scene);
+                    
+                    point.position = new BABYLON.Vector3(
+                        (Math.random() - 0.5) * 6,
+                        (Math.random() - 0.5) * 6,
+                        (Math.random() - 0.5) * 6
+                    );
+                    
+                    const pointMaterial = new BABYLON.StandardMaterial(`pointMat${i}`, scene);
+                    pointMaterial.diffuseColor = new BABYLON.Color3(
+                        Math.random(),
+                        Math.random(),
+                        Math.random()
+                    );
+                    point.material = pointMaterial;
+                    
+                    // Parent to main sphere for easy manipulation
+                    point.parent = sphere;
+                }
+                
+                /*
+                 * ACTUAL GAUSSIAN SPLAT LOADING CODE WOULD GO HERE:
+                 * 
+                 * // Example of how to load actual .ply files:
+                 * BABYLON.SceneLoader.ImportMesh("", "assets/", "splat.ply", scene, (meshes) => {
+                 *     splatMesh = meshes[0];
+                 *     // Configure splat-specific settings
+                 * }, null, (scene, message, exception) => {
+                 *     throw new Error(`Failed to load splat: ${message}`);
+                 * });
+                 * 
+                 * // Or using GaussianSplattingMesh if available:
+                 * splatMesh = new BABYLON.GaussianSplattingMesh("splat", scene);
+                 * await splatMesh.loadFromUrl("assets/splat.ply");
+                 */
+                
+                // Center camera on the splat
+                camera.setTarget(splatMesh.position);
+                
+                updateLoadingText('Optimizing for Mobile...');
+                
+                // Apply mobile optimizations to meshes
+                if (isMobile) {
+                    applyMobileOptimizations();
+                }
+                
+            } catch (error) {
+                throw new Error(`Failed to load Gaussian splat: ${error.message}`);
+            }
+        }
+        
+        function applyMobileOptimizations() {
+            // Reduce mesh complexity for mobile
+            scene.meshes.forEach(mesh => {
+                if (mesh.simplify) {
+                    mesh.simplify([
+                        { quality: 0.8, distance: 10 },
+                        { quality: 0.6, distance: 20 },
+                        { quality: 0.4, distance: 40 }
+                    ]);
+                }
+            });
+            
+            // Disable unnecessary features
+            scene.particlesEnabled = false;
+            scene.spritesEnabled = false;
+            scene.skeletonsEnabled = false;
+            scene.lensFlaresEnabled = false;
+            scene.proceduralTexturesEnabled = false;
+            scene.renderTargetsEnabled = false;
+            scene.probesEnabled = false;
+            
+            // LOD (Level of Detail) could be implemented here
+        }
+        
+        // Control functions
+        function resetCamera() {
+            if (camera && splatMesh) {
+                camera.setPosition(new BABYLON.Vector3(10, 10, 10));
+                camera.setTarget(splatMesh.position);
+            }
+        }
+        
+        function toggleQuality() {
+            if (!engine) return;
+            
+            isLowQuality = !isLowQuality;
+            
+            if (isLowQuality) {
+                engine.setHardwareScalingLevel(0.6);
+                document.querySelector('#controls .control-button:nth-child(2)').textContent = 'High Quality';
+            } else {
+                engine.setHardwareScalingLevel(1.0);
+                document.querySelector('#controls .control-button:nth-child(2)').textContent = 'Low Quality';
+            }
+            
+            if (tg) {
+                tg.HapticFeedback.selectionChanged();
+            }
+        }
+        
+        function retryLoading() {
+            document.getElementById('errorOverlay').style.display = 'none';
+            document.getElementById('loadingOverlay').classList.remove('hidden');
+            
+            // Clean up previous attempt
+            if (engine) {
+                engine.dispose();
+            }
+            
+            // Retry initialization
+            setTimeout(initBabylonJS, 500);
+        }
+        
+        // Show main button in Telegram
+        if (tg) {
+            tg.MainButton.setText('Loading...');
+            tg.MainButton.show();
+        }
+        
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(initBabylonJS, 100);
+        });
+        
+        // Handle page visibility changes for performance
+        document.addEventListener('visibilitychange', () => {
+            if (engine) {
+                if (document.hidden) {
+                    engine.stopRenderLoop();
+                } else {
+                    engine.runRenderLoop(() => {
+                        if (scene && scene.activeCamera) {
+                            scene.render();
+                        }
+                    });
+                }
+            }
+        });
+    </script>
+</body>
+</html>
