@@ -8,9 +8,12 @@
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Babylon.js CDN -->
-    <script src="https://cdn.babylonjs.com/babylon.js"></script>
-    <script src="https://cdn.babylonjs.com/loaders/babylonjs.loaders.min.js"></script>
+    <!-- Three.js CDN -->
+    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <!-- Three.js Controls -->
+    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
+    <!-- Gaussian Splat library for Three.js -->
+    <script src="https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.umd.cjs"></script>
     
     <style>
         :root {
@@ -224,7 +227,7 @@
         }
         
         // Global variables
-        let engine, scene, camera, canvas, splatMesh;
+        let renderer, scene, camera, controls, canvas, splatMesh;
         let isLowQuality = false;
         
         // Mobile detection
@@ -235,7 +238,7 @@
         function checkWebGLSupport() {
             try {
                 const canvas = document.createElement('canvas');
-                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                const gl = canvas.getContext('webgl2') || canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
                 return !!gl;
             } catch (e) {
                 return false;
@@ -270,7 +273,7 @@
             document.querySelector('.loading-text').textContent = text;
         }
         
-        async function initBabylonJS() {
+        async function initThreeJS() {
             try {
                 if (!checkWebGLSupport()) {
                     throw new Error('WebGL is not supported on this device');
@@ -278,189 +281,221 @@
                 
                 canvas = document.getElementById('renderCanvas');
                 
-                // Create engine with mobile optimizations
-                engine = new BABYLON.Engine(canvas, true, {
-                    antialias: !isMobile,
-                    stencil: false,
-                    depth: true,
-                    alpha: false,
-                    premultipliedAlpha: false,
-                    preserveDrawingBuffer: false,
-                    powerPreference: "high-performance",
-                    doNotHandleContextLost: true,
-                    audioEngine: false
-                });
-                
-                // Mobile optimizations
-                if (isMobile) {
-                    engine.setHardwareScalingLevel(0.7);
-                    engine.setSize(window.innerWidth, window.innerHeight);
-                    isLowQuality = true;
-                }
-                
-                // Cap FPS for battery saving
-                engine.getFps = function() { return Math.min(30, this._fps); };
-                
                 updateLoadingText('Initializing 3D Scene...');
                 
                 // Create scene
-                scene = new BABYLON.Scene(engine);
-                scene.createDefaultCameraOrLights(true, false, true);
-                
-                // Configure scene for performance
-                scene.skipPointerMovePicking = true;
-                scene.skipPointerDownPicking = true;
-                scene.skipPointerUpPicking = true;
-                scene.autoClear = true;
-                scene.autoClearDepthAndStencil = true;
+                scene = new THREE.Scene();
+                scene.background = new THREE.Color(0x000000);
                 
                 // Setup camera
                 setupCamera();
+                
+                // Create renderer with mobile optimizations
+                renderer = new THREE.WebGLRenderer({
+                    canvas: canvas,
+                    antialias: !isMobile,
+                    alpha: false,
+                    premultipliedAlpha: false,
+                    preserveDrawingBuffer: false,
+                    powerPreference: "high-performance"
+                });
+                
+                renderer.setSize(window.innerWidth, window.innerHeight);
+                renderer.outputColorSpace = THREE.SRGBColorSpace;
+                
+                // Mobile optimizations
+                if (isMobile) {
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * 0.7);
+                    isLowQuality = true;
+                } else {
+                    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+                }
+                
+                // Setup controls
+                setupControls();
                 
                 // Setup lighting
                 setupLighting();
                 
                 updateLoadingText('Loading Gaussian Splat Data...');
                 
-                // Load splat (placeholder for now)
+                // Load splat
                 await loadGaussianSplat();
                 
                 // Start render loop
-                engine.runRenderLoop(() => {
-                    if (scene && scene.activeCamera) {
-                        scene.render();
+                function animate() {
+                    requestAnimationFrame(animate);
+                    
+                    if (controls) {
+                        controls.update();
                     }
-                });
+                    
+                    if (renderer && scene && camera) {
+                        renderer.render(scene, camera);
+                    }
+                }
+                animate();
                 
                 // Handle resize
-                window.addEventListener('resize', () => {
-                    engine.resize();
-                });
+                window.addEventListener('resize', onWindowResize);
                 
                 hideLoading();
                 
             } catch (error) {
-                console.error('Babylon.js initialization error:', error);
+                console.error('Three.js initialization error:', error);
                 showError(error.message || 'Failed to initialize 3D viewer');
             }
         }
         
         function setupCamera() {
-            // Remove default camera
-            if (scene.activeCamera) {
-                scene.activeCamera.dispose();
-            }
-            
-            // Create arc rotate camera optimized for mobile
-            camera = new BABYLON.ArcRotateCamera(
-                "camera",
-                Math.PI / 4,
-                Math.PI / 3,
-                10,
-                BABYLON.Vector3.Zero(),
-                scene
+            // Create perspective camera
+            camera = new THREE.PerspectiveCamera(
+                75, // FOV
+                window.innerWidth / window.innerHeight, // aspect ratio
+                0.1, // near
+                1000 // far
             );
             
-            // Mobile-optimized camera settings
-            camera.setTarget(BABYLON.Vector3.Zero());
-            camera.attachControls(canvas, true);
-            camera.wheelPrecision = 50;
-            camera.pinchPrecision = 100;
-            camera.panningSensibility = 1000;
+            // Position camera
+            camera.position.set(10, 10, 10);
+            camera.lookAt(0, 0, 0);
+        }
+        
+        function setupControls() {
+            // Create orbit controls for mobile-optimized interaction
+            controls = new THREE.OrbitControls(camera, renderer.domElement);
+            
+            // Mobile-optimized control settings
+            controls.enableDamping = true;
+            controls.dampingFactor = 0.05;
+            controls.screenSpacePanning = false;
             
             // Limit camera movement
-            camera.lowerRadiusLimit = 2;
-            camera.upperRadiusLimit = 50;
-            camera.lowerBetaLimit = 0.1;
-            camera.upperBetaLimit = Math.PI - 0.1;
+            controls.minDistance = 2;
+            controls.maxDistance = 50;
+            controls.maxPolarAngle = Math.PI * 0.9;
+            controls.minPolarAngle = Math.PI * 0.1;
             
-            // Smooth interactions
-            camera.inertialAlphaOffset = 0;
-            camera.inertialBetaOffset = 0;
-            camera.inertialRadiusOffset = 0;
+            // Touch settings for mobile
+            controls.touches = {
+                ONE: THREE.TOUCH.ROTATE,
+                TWO: THREE.TOUCH.DOLLY_PAN
+            };
             
-            scene.activeCamera = camera;
+            // Auto-rotate for demo (optional)
+            controls.autoRotate = false;
+            controls.autoRotateSpeed = 0.5;
+            
+            controls.target.set(0, 0, 0);
         }
         
         function setupLighting() {
-            // Remove default lights
-            scene.lights.forEach(light => light.dispose());
+            // Add ambient light for basic visibility
+            const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+            scene.add(ambientLight);
             
-            // Simple hemisphere light for performance
-            const light = new BABYLON.HemisphericLight("hemiLight", new BABYLON.Vector3(0, 1, 0), scene);
-            light.intensity = 1.0;
-            light.diffuse = new BABYLON.Color3(1, 1, 1);
-            light.specular = new BABYLON.Color3(0.2, 0.2, 0.2);
+            // Add directional light
+            const directionalLight = new THREE.DirectionalLight(0xffffff, 0.8);
+            directionalLight.position.set(1, 1, 1);
+            scene.add(directionalLight);
+            
+            // Add point light for better illumination
+            const pointLight = new THREE.PointLight(0xffffff, 0.5, 100);
+            pointLight.position.set(10, 10, 10);
+            scene.add(pointLight);
+        }
+        
+        function onWindowResize() {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
         }
         
         async function loadGaussianSplat() {
             try {
-                // TODO: Replace with actual .ply file loading
-                // For now, create a placeholder sphere with particle-like appearance
-                
                 updateLoadingText('Creating Splat Visualization...');
                 
-                // Create a sphere as placeholder for Gaussian splat
-                const sphere = BABYLON.MeshBuilder.CreateSphere("splatSphere", {
-                    diameter: 4,
-                    segments: 32
-                }, scene);
+                // Create placeholder geometry for Gaussian splat visualization
+                // This simulates what a real Gaussian splat would look like
                 
-                // Create a material that mimics splat appearance
-                const material = new BABYLON.StandardMaterial("splatMaterial", scene);
-                material.diffuseColor = new BABYLON.Color3(0.8, 0.6, 0.4);
-                material.specularColor = new BABYLON.Color3(0.2, 0.2, 0.2);
-                material.roughness = 0.8;
+                // Create main sphere as placeholder
+                const sphereGeometry = new THREE.SphereGeometry(2, 32, 32);
+                const sphereMaterial = new THREE.MeshStandardMaterial({
+                    color: 0xcc9966,
+                    roughness: 0.8,
+                    metalness: 0.2
+                });
                 
-                sphere.material = material;
+                const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
+                scene.add(sphere);
                 splatMesh = sphere;
                 
-                // Add some fake "splat points" as smaller spheres
-                for (let i = 0; i < 50; i++) {
-                    const point = BABYLON.MeshBuilder.CreateSphere(`point${i}`, {
-                        diameter: 0.1
-                    }, scene);
+                // Create particle-like points to simulate splat appearance
+                const pointsGeometry = new THREE.BufferGeometry();
+                const pointsCount = 1000;
+                const positions = new Float32Array(pointsCount * 3);
+                const colors = new Float32Array(pointsCount * 3);
+                
+                for (let i = 0; i < pointsCount; i++) {
+                    const i3 = i * 3;
                     
-                    point.position = new BABYLON.Vector3(
-                        (Math.random() - 0.5) * 6,
-                        (Math.random() - 0.5) * 6,
-                        (Math.random() - 0.5) * 6
-                    );
+                    // Random positions around the sphere
+                    const radius = 2 + Math.random() * 3;
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.random() * Math.PI;
                     
-                    const pointMaterial = new BABYLON.StandardMaterial(`pointMat${i}`, scene);
-                    pointMaterial.diffuseColor = new BABYLON.Color3(
-                        Math.random(),
-                        Math.random(),
-                        Math.random()
-                    );
-                    point.material = pointMaterial;
+                    positions[i3] = radius * Math.sin(phi) * Math.cos(theta);
+                    positions[i3 + 1] = radius * Math.sin(phi) * Math.sin(theta);
+                    positions[i3 + 2] = radius * Math.cos(phi);
                     
-                    // Parent to main sphere for easy manipulation
-                    point.parent = sphere;
+                    // Random colors
+                    colors[i3] = Math.random();
+                    colors[i3 + 1] = Math.random();
+                    colors[i3 + 2] = Math.random();
                 }
+                
+                pointsGeometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+                pointsGeometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+                
+                const pointsMaterial = new THREE.PointsMaterial({
+                    size: 0.05,
+                    vertexColors: true,
+                    transparent: true,
+                    opacity: 0.8
+                });
+                
+                const points = new THREE.Points(pointsGeometry, pointsMaterial);
+                scene.add(points);
                 
                 /*
                  * ACTUAL GAUSSIAN SPLAT LOADING CODE WOULD GO HERE:
                  * 
-                 * // Example of how to load actual .ply files:
-                 * BABYLON.SceneLoader.ImportMesh("", "assets/", "splat.ply", scene, (meshes) => {
-                 *     splatMesh = meshes[0];
-                 *     // Configure splat-specific settings
-                 * }, null, (scene, message, exception) => {
-                 *     throw new Error(`Failed to load splat: ${message}`);
+                 * // Using the Gaussian Splats 3D library:
+                 * const viewer = new GaussianSplats3D.Viewer({
+                 *     'cameraUp': [0, -1, -0.6],
+                 *     'initialCameraPosition': [-1, -4, 6],
+                 *     'initialCameraLookAt': [0, 4, 0]
                  * });
+                 * viewer.addSplatScene('assets/splat.ply')
+                 *   .then(() => {
+                 *       viewer.start();
+                 *   });
                  * 
-                 * // Or using GaussianSplattingMesh if available:
-                 * splatMesh = new BABYLON.GaussianSplattingMesh("splat", scene);
-                 * await splatMesh.loadFromUrl("assets/splat.ply");
+                 * // Or load .ply files directly:
+                 * const loader = new THREE.PLYLoader();
+                 * loader.load('assets/splat.ply', (geometry) => {
+                 *     const material = new THREE.PointsMaterial({ size: 0.1 });
+                 *     splatMesh = new THREE.Points(geometry, material);
+                 *     scene.add(splatMesh);
+                 * });
                  */
                 
                 // Center camera on the splat
-                camera.setTarget(splatMesh.position);
+                controls.target.copy(sphere.position);
                 
                 updateLoadingText('Optimizing for Mobile...');
                 
-                // Apply mobile optimizations to meshes
+                // Apply mobile optimizations
                 if (isMobile) {
                     applyMobileOptimizations();
                 }
@@ -471,47 +506,61 @@
         }
         
         function applyMobileOptimizations() {
-            // Reduce mesh complexity for mobile
-            scene.meshes.forEach(mesh => {
-                if (mesh.simplify) {
-                    mesh.simplify([
-                        { quality: 0.8, distance: 10 },
-                        { quality: 0.6, distance: 20 },
-                        { quality: 0.4, distance: 40 }
-                    ]);
+            // Reduce point count for mobile devices
+            const points = scene.children.find(child => child.type === 'Points');
+            if (points && isMobile) {
+                const geometry = points.geometry;
+                const positions = geometry.attributes.position.array;
+                const colors = geometry.attributes.color.array;
+                
+                // Reduce to half the points for mobile
+                const reducedCount = Math.floor(positions.length / 6); // /6 because /2 for half points and /3 for xyz
+                const newPositions = new Float32Array(reducedCount * 3);
+                const newColors = new Float32Array(reducedCount * 3);
+                
+                for (let i = 0; i < reducedCount; i++) {
+                    const srcIndex = i * 6; // Skip every other point
+                    const dstIndex = i * 3;
+                    
+                    newPositions[dstIndex] = positions[srcIndex];
+                    newPositions[dstIndex + 1] = positions[srcIndex + 1];
+                    newPositions[dstIndex + 2] = positions[srcIndex + 2];
+                    
+                    newColors[dstIndex] = colors[srcIndex];
+                    newColors[dstIndex + 1] = colors[srcIndex + 1];
+                    newColors[dstIndex + 2] = colors[srcIndex + 2];
                 }
-            });
+                
+                geometry.setAttribute('position', new THREE.BufferAttribute(newPositions, 3));
+                geometry.setAttribute('color', new THREE.BufferAttribute(newColors, 3));
+            }
             
-            // Disable unnecessary features
-            scene.particlesEnabled = false;
-            scene.spritesEnabled = false;
-            scene.skeletonsEnabled = false;
-            scene.lensFlaresEnabled = false;
-            scene.proceduralTexturesEnabled = false;
-            scene.renderTargetsEnabled = false;
-            scene.probesEnabled = false;
-            
-            // LOD (Level of Detail) could be implemented here
+            // Reduce shadow quality for mobile
+            if (renderer && isMobile) {
+                renderer.shadowMap.enabled = false;
+                renderer.antialias = false;
+            }
         }
         
         // Control functions
         function resetCamera() {
-            if (camera && splatMesh) {
-                camera.setPosition(new BABYLON.Vector3(10, 10, 10));
-                camera.setTarget(splatMesh.position);
+            if (camera && controls && splatMesh) {
+                camera.position.set(10, 10, 10);
+                controls.target.copy(splatMesh.position);
+                controls.update();
             }
         }
         
         function toggleQuality() {
-            if (!engine) return;
+            if (!renderer) return;
             
             isLowQuality = !isLowQuality;
             
             if (isLowQuality) {
-                engine.setHardwareScalingLevel(0.6);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2) * 0.6);
                 document.querySelector('#controls .control-button:nth-child(2)').textContent = 'High Quality';
             } else {
-                engine.setHardwareScalingLevel(1.0);
+                renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 document.querySelector('#controls .control-button:nth-child(2)').textContent = 'Low Quality';
             }
             
@@ -525,12 +574,17 @@
             document.getElementById('loadingOverlay').classList.remove('hidden');
             
             // Clean up previous attempt
-            if (engine) {
-                engine.dispose();
+            if (renderer) {
+                renderer.dispose();
+                renderer = null;
+            }
+            if (scene) {
+                scene.clear();
+                scene = null;
             }
             
             // Retry initialization
-            setTimeout(initBabylonJS, 500);
+            setTimeout(initThreeJS, 500);
         }
         
         // Show main button in Telegram
@@ -541,20 +595,16 @@
         
         // Initialize when page loads
         window.addEventListener('load', () => {
-            setTimeout(initBabylonJS, 100);
+            setTimeout(initThreeJS, 100);
         });
         
         // Handle page visibility changes for performance
         document.addEventListener('visibilitychange', () => {
-            if (engine) {
+            if (controls) {
                 if (document.hidden) {
-                    engine.stopRenderLoop();
+                    controls.enabled = false;
                 } else {
-                    engine.runRenderLoop(() => {
-                        if (scene && scene.activeCamera) {
-                            scene.render();
-                        }
-                    });
+                    controls.enabled = true;
                 }
             }
         });
