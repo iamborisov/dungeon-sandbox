@@ -9,11 +9,9 @@
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
     <!-- Three.js CDN -->
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
     <!-- Three.js Controls -->
-    <script src="https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
-    <!-- Gaussian Splat library for Three.js -->
-    <script src="https://unpkg.com/@mkkellogg/gaussian-splats-3d@0.4.0/build/gaussian-splats-3d.umd.cjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/examples/js/controls/OrbitControls.js"></script>
     
     <style>
         :root {
@@ -275,6 +273,11 @@
         
         async function initThreeJS() {
             try {
+                // Check if THREE.js is loaded
+                if (typeof THREE === 'undefined') {
+                    throw new Error('THREE.js library failed to load');
+                }
+                
                 if (!checkWebGLSupport()) {
                     throw new Error('WebGL is not supported on this device');
                 }
@@ -362,6 +365,12 @@
         }
         
         function setupControls() {
+            // Check if OrbitControls is available
+            if (typeof THREE.OrbitControls === 'undefined') {
+                console.warn('OrbitControls not available, using basic mouse/touch events');
+                return;
+            }
+            
             // Create orbit controls for mobile-optimized interaction
             controls = new THREE.OrbitControls(camera, renderer.domElement);
             
