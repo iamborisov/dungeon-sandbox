@@ -137,17 +137,48 @@ app.use('/assets', express.static(path.join(__dirname, 'assets'), {
 }));
 
 // Webhook endpoint for Telegram bot (optional)
-app.post('/webhook', express.json(), (req, res) => {
+app.post('/webhook', express.json(), async (req, res) => {
   const update = req.body;
   
   // Log bot interactions for analytics
   if (update.message) {
     console.log(`Bot message from user ${update.message.from.id}: ${update.message.text}`);
     
-    // You can handle specific commands here
+    // Handle specific commands
     if (update.message.text === '/start') {
-      // User started the bot - track this event
       console.log('User started the bot');
+      
+      try {
+        // Send welcome message with inline keyboard to launch the app
+        await telegramAPI('sendMessage', {
+          chat_id: update.message.chat.id,
+          text: '🌟 Welcome to Gaussian Splat Viewer!\n\nExperience 3D Gaussian splats with mobile-optimized controls.',
+          reply_markup: {
+            inline_keyboard: [[
+              {
+                text: '🚀 Launch 3D Viewer',
+                web_app: { url: BOT_CONFIG.baseUrl }
+              }
+            ]]
+          }
+        });
+      } catch (error) {
+        console.error('Failed to send welcome message:', error);
+      }
+    } else if (update.message.text === '/help') {
+      try {
+        await telegramAPI('sendMessage', {
+          chat_id: update.message.chat.id,
+          text: '🔧 Gaussian Splat Viewer Help\n\n' +
+                '• Use /start to launch the 3D viewer\n' +
+                '• Touch and drag to rotate the view\n' +
+                '• Pinch to zoom in/out\n' +
+                '• Use the quality toggle for performance\n\n' +
+                'Optimized for mobile devices with WebGL support.'
+        });
+      } catch (error) {
+        console.error('Failed to send help message:', error);
+      }
     }
   }
   
