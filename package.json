@@ -12,7 +12,7 @@
     "build:watch": "webpack --mode=development --watch",
     "deploy": "npm run clean && npm run build && npm start",
     "postinstall": "npm run build",
-    "railway:build": "cd /app && git lfs install && git lfs pull && npm run build",
+    "railway:build": "npm run build && cd /app/assets/splats && curl -O https://github.com/iamborisov/dungeon-sandbox/raw/refs/heads/master/assets/splats/banana.ply?download=",
     "setup-bot": "node setup-bot.js",
     "check-webhook": "node setup-bot.js check",
     "clean": "rimraf dist/"
