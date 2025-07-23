@@ -24,7 +24,8 @@
       "Bash(true)",
       "Bash(npm run clean:*)",
       "Bash(npm run postinstall:*)",
-      "Bash(npm run deploy:*)"
+      "Bash(npm run deploy:*)",
+      "Bash(git lfs:*)"
     ],
     "deny": []
   }

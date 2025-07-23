@@ -12,6 +12,7 @@
     "build:watch": "webpack --mode=development --watch",
     "deploy": "npm run clean && npm run build && npm start",
     "postinstall": "npm run build",
+    "railway:build": "git lfs install && git lfs pull && npm run build",
     "setup-bot": "node setup-bot.js",
     "check-webhook": "node setup-bot.js check",
     "clean": "rimraf dist/"

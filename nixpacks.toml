@@ -1,8 +1,12 @@
 [phases.setup]
-nixPkgs = ['nodejs-18_x', 'npm-9_x']
+nixPkgs = ['nodejs-18_x', 'npm-9_x', 'git-lfs']
 
 [phases.install]
-cmds = ['npm install --omit=dev']
+cmds = [
+  'git lfs install',
+  'git lfs pull',
+  'npm install'
+]
 
 [phases.build]
 cmds = ['npm run build']

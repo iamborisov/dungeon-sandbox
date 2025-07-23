@@ -178,21 +178,36 @@ class TGSplatApp {
         const assets = this.app.getModule('assets');
         const config = this.app.getModule('config');
         const ui = this.app.getModule('ui');
+        const logger = this.app.getModule('logger');
 
         ui.showLoading('Loading Gaussian Splat...', 'Preparing enterprise 3D viewer for optimal experience');
 
         try {
             const defaultSplat = config.get('assets.defaultSplat');
-            await assets.loadAsset(defaultSplat, {
-                transform: {
-                    optimize: true
-                }
-            });
-
-            await this.initializeScene();
+            
+            // First check if the asset is available
+            const response = await fetch(`/assets/${defaultSplat}`, { method: 'HEAD' });
+            
+            if (response.ok) {
+                // Asset exists, load it normally
+                await assets.loadAsset(defaultSplat, {
+                    transform: {
+                        optimize: true
+                    }
+                });
+                await this.initializeScene();
+                logger.info('Successfully loaded Gaussian splat asset');
+            } else {
+                // Asset not available (likely Git LFS issue), use fallback
+                logger.warn('Default splat asset not available, using fallback scene', { 
+                    status: response.status,
+                    asset: defaultSplat 
+                });
+                await this.createFallbackScene();
+            }
             
         } catch (error) {
-            this.app.getModule('logger').error('Failed to load initial assets', {}, error);
+            logger.error('Failed to load initial assets', {}, error);
             await this.createFallbackScene();
         }
 
