@@ -12,3 +12,4 @@ yarn-error.log
 /server.log
 /server.pid
 test-server.log
+dist/

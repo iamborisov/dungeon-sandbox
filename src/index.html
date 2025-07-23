@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>TGSplat Enterprise - Gaussian Splat Viewer</title>
+    
+    <!-- Telegram Web App Script -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    
+    <!-- Webpack will inject CSS and JS bundles here -->
+</head>
+<body>
+    <!-- Loading Overlay -->
+    <div id="loadingOverlay">
+        <div class="spinner"></div>
+        <div class="loading-text">Loading Gaussian Splat...</div>
+        <div class="loading-hint">Preparing enterprise 3D viewer for optimal experience</div>
+    </div>
+    
+    <!-- Error Overlay -->
+    <div id="errorOverlay">
+        <div class="error-icon">⚠️</div>
+        <div class="error-title">Unable to Load Application</div>
+        <div class="error-message" id="errorMessage">Failed to initialize the 3D viewer. Please check your connection and try again.</div>
+        <button class="retry-button" id="retryButton">Try Again</button>
+    </div>
+    
+    <!-- Render Canvas -->
+    <canvas id="renderCanvas"></canvas>
+    
+    <!-- Controls -->
+    <div id="controls">
+        <button class="control-button" id="resetCameraButton">Reset View</button>
+        <button class="control-button" id="toggleQualityButton">Quality</button>
+    </div>
+</body>
+</html>

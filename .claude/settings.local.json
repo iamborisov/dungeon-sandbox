@@ -19,7 +19,9 @@
       "WebFetch(domain:unpkg.com)",
       "WebFetch(domain:app.unpkg.com)",
       "Bash(pkill:*)",
-      "Bash(timeout 5s npm start)"
+      "Bash(timeout 5s npm start)",
+      "Bash(npm run build:*)",
+      "Bash(true)"
     ],
     "deny": []
   }

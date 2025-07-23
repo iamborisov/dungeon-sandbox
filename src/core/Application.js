@@ -19,24 +19,41 @@ class Application {
             
             return this;
         } catch (error) {
+            console.error(error);
             throw new ApplicationError('Failed to initialize application', error);
         }
     }
 
     async loadModules() {
         const moduleSpecs = [
-            { name: 'logger', module: LoggerModule },
-            { name: 'config', module: ConfigModule },
-            { name: 'telegram', module: TelegramModule },
-            { name: 'renderer', module: RendererModule },
-            { name: 'assets', module: AssetModule },
-            { name: 'ui', module: UIModule },
-            { name: 'performance', module: PerformanceModule }
+            { name: 'logger', module: 'LoggerModule' },
+            { name: 'config', module: 'ConfigModule' },
+            { name: 'telegram', module: 'TelegramModule' },
+            { name: 'renderer', module: 'RendererModule' },
+            { name: 'assets', module: 'AssetModule' },
+            { name: 'ui', module: 'UIModule' },
+            { name: 'performance', module: 'PerformanceModule' }
         ];
 
         for (const spec of moduleSpecs) {
-            const instance = new spec.module(this);
+            // Wait for module to be available on window object
+            await this.waitForModule(spec.module);
+            const ModuleClass = window[spec.module];
+            if (!ModuleClass) {
+                throw new Error(`Module ${spec.module} not found on window object`);
+            }
+            const instance = new ModuleClass(this);
             this.modules.set(spec.name, instance);
+        }
+    }
+
+    async waitForModule(moduleName, maxWait = 5000) {
+        const startTime = Date.now();
+        while (!window[moduleName] && (Date.now() - startTime) < maxWait) {
+            await new Promise(resolve => setTimeout(resolve, 50));
+        }
+        if (!window[moduleName]) {
+            throw new Error(`Module ${moduleName} failed to load within ${maxWait}ms`);
         }
     }
 

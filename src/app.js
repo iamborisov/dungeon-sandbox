@@ -1,3 +1,28 @@
+// Enterprise TGSplat Application Entry Point
+import * as THREE from 'three';
+import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+
+// Import Enterprise Styles
+import './styles/enterprise.css';
+
+// Import Core Application Framework
+import './core/Application.js';
+
+// Import All Modules
+import './modules/LoggerModule.js';
+import './modules/ConfigModule.js';
+import './modules/TelegramModule.js';
+import './modules/RendererModule.js';
+import './modules/AssetModule.js';
+import './modules/UIModule.js';
+import './modules/PerformanceModule.js';
+
+// Make THREE.js globally available for compatibility
+window.THREE = THREE;
+window.THREE.OrbitControls = OrbitControls;
+window.THREE.PLYLoader = PLYLoader;
+
 class TGSplatApp {
     constructor() {
         this.app = null;
@@ -16,7 +41,8 @@ class TGSplatApp {
 
     async _performInitialization() {
         try {
-            await this.waitForDependencies();
+            // Ensure DOM is ready
+            await this.waitForDOM();
             
             this.app = new Application();
             
@@ -28,7 +54,7 @@ class TGSplatApp {
             
             this.isInitialized = true;
             
-            console.log('🚀 TGSplat application initialized successfully');
+            console.log('🚀 TGSplat Enterprise application initialized successfully');
             
             return this.app;
             
@@ -39,34 +65,14 @@ class TGSplatApp {
         }
     }
 
-    async waitForDependencies() {
-        const dependencies = [
-            { name: 'THREE.js', check: () => typeof THREE !== 'undefined' },
-            { name: 'Application', check: () => typeof Application !== 'undefined' },
-            { name: 'DOM', check: () => document.readyState === 'complete' || document.readyState === 'interactive' }
-        ];
-
-        const maxWaitTime = 10000;
-        const checkInterval = 100;
-        let elapsed = 0;
-
-        while (elapsed < maxWaitTime) {
-            const unmetDependencies = dependencies.filter(dep => !dep.check());
-            
-            if (unmetDependencies.length === 0) {
-                return;
-            }
-
-            if (elapsed % 1000 === 0) {
-                console.log('⏳ Waiting for dependencies:', unmetDependencies.map(d => d.name).join(', '));
-            }
-
-            await new Promise(resolve => setTimeout(resolve, checkInterval));
-            elapsed += checkInterval;
+    async waitForDOM() {
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+            return Promise.resolve();
         }
-
-        const failedDependencies = dependencies.filter(dep => !dep.check()).map(d => d.name);
-        throw new Error(`Dependencies not loaded within ${maxWaitTime}ms: ${failedDependencies.join(', ')}`);
+        
+        return new Promise(resolve => {
+            document.addEventListener('DOMContentLoaded', resolve);
+        });
     }
 
     buildConfiguration() {
@@ -76,7 +82,7 @@ class TGSplatApp {
 
         return {
             app: {
-                name: 'TGSplat',
+                name: 'TGSplat Enterprise',
                 version: '2.0.0',
                 environment: isTelegram ? 'telegram' : 'standalone'
             },
@@ -113,9 +119,9 @@ class TGSplatApp {
         const telegram = this.app.getModule('telegram');
         const ui = this.app.getModule('ui');
         const renderer = this.app.getModule('renderer');
-        const assets = this.app.getModule('assets');
         const performance = this.app.getModule('performance');
 
+        // Event handlers
         this.app.eventBus.on('telegram:back:pressed', () => {
             this.handleBackButton();
         });
@@ -134,18 +140,6 @@ class TGSplatApp {
             performance.optimizePerformance();
         });
 
-        this.app.eventBus.on('performance:frame:drop', (data) => {
-            logger.warn('Frame drops detected', data);
-            if (data.fps < 20) {
-                performance.optimizePerformance();
-            }
-        });
-
-        this.app.eventBus.on('assets:loading:failed', (data) => {
-            logger.error('Asset loading failed', data);
-            ui.showError('Asset Loading Failed', `Failed to load: ${data.url}`);
-        });
-
         this.app.eventBus.on('renderer:initialized', () => {
             if (telegram.isStandalone()) {
                 ui.showNotification('3D viewer ready', 'success');
@@ -155,6 +149,7 @@ class TGSplatApp {
             }
         });
 
+        // Global error handlers
         window.addEventListener('beforeunload', () => {
             this.shutdown();
         });
@@ -180,7 +175,7 @@ class TGSplatApp {
         const config = this.app.getModule('config');
         const ui = this.app.getModule('ui');
 
-        ui.showLoading('Loading Gaussian Splat...', 'Preparing 3D viewer for optimal experience');
+        ui.showLoading('Loading Gaussian Splat...', 'Preparing enterprise 3D viewer for optimal experience');
 
         try {
             const defaultSplat = config.get('assets.defaultSplat');
@@ -236,8 +231,9 @@ class TGSplatApp {
         const scene = this.app.getState('scene');
         const logger = this.app.getModule('logger');
 
-        logger.info('Creating fallback scene');
+        logger.info('Creating enterprise fallback scene');
 
+        // Create main demonstration sphere
         const sphereGeometry = new THREE.SphereGeometry(2, 32, 32);
         const sphereMaterial = new THREE.MeshStandardMaterial({
             color: 0xcc9966,
@@ -248,6 +244,7 @@ class TGSplatApp {
         const sphere = new THREE.Mesh(sphereGeometry, sphereMaterial);
         scene.add(sphere);
 
+        // Create particle cloud for splat simulation
         const pointsGeometry = new THREE.BufferGeometry();
         const pointsCount = 1000;
         const positions = new Float32Array(pointsCount * 3);
@@ -353,7 +350,7 @@ class TGSplatApp {
         }
 
         if (errorOverlay && errorMessage) {
-            errorMessage.textContent = error.message || 'Failed to initialize the application';
+            errorMessage.textContent = error.message || 'Failed to initialize the enterprise application';
             errorOverlay.style.display = 'flex';
         }
 
@@ -395,6 +392,7 @@ class TGSplatApp {
     }
 }
 
+// Global functions for HTML compatibility
 let tgSplatApp;
 
 async function initializeTGSplat() {
@@ -404,7 +402,7 @@ async function initializeTGSplat() {
         
         window.tgSplatApp = tgSplatApp;
         
-        console.log('✅ TGSplat application ready');
+        console.log('✅ TGSplat Enterprise application ready');
         
     } catch (error) {
         console.error('❌ TGSplat initialization failed:', error);
@@ -431,13 +429,39 @@ function toggleQuality() {
     }
 }
 
+// Export global functions
 window.initializeTGSplat = initializeTGSplat;
 window.retryLoading = retryLoading;
 window.resetCamera = resetCamera;
 window.toggleQuality = toggleQuality;
 
+// Set up event listeners for UI buttons
+function setupEventListeners() {
+    const retryButton = document.getElementById('retryButton');
+    const resetCameraButton = document.getElementById('resetCameraButton');
+    const toggleQualityButton = document.getElementById('toggleQualityButton');
+    
+    if (retryButton) {
+        retryButton.addEventListener('click', retryLoading);
+    }
+    
+    if (resetCameraButton) {
+        resetCameraButton.addEventListener('click', resetCamera);
+    }
+    
+    if (toggleQualityButton) {
+        toggleQualityButton.addEventListener('click', toggleQuality);
+    }
+}
+
+// Auto-initialize when DOM is ready
 if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeTGSplat);
+    document.addEventListener('DOMContentLoaded', () => {
+        setupEventListeners();
+        initializeTGSplat();
+    });
 } else {
-    setTimeout(initializeTGSplat, 100);
+    // DOM is already ready, initialize immediately  
+    setupEventListeners();
+    initializeTGSplat();
 }

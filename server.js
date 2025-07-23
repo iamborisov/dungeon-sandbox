@@ -22,13 +22,15 @@ app.use(helmet({
       defaultSrc: ["'self'"],
       scriptSrc: [
         "'self'", 
-        "'unsafe-inline'", 
+        "'unsafe-inline'",
+        "'unsafe-eval'",
         "https://telegram.org",
         "https://unpkg.com",
         "https://cdn.jsdelivr.net",
         "https://cdnjs.cloudflare.com", 
         "https://threejs.org"
       ],
+      scriptSrcAttr: ["'unsafe-inline'"],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'", "blob:"],
@@ -48,7 +50,13 @@ app.use(express.static(path.join(__dirname, 'public'), {
   etag: true
 }));
 
-// Serve src directory for modular architecture
+// Serve dist directory for webpack builds
+app.use('/dist', express.static(path.join(__dirname, 'dist'), {
+  maxAge: '7d',
+  etag: true
+}));
+
+// Serve src directory for development
 app.use('/src', express.static(path.join(__dirname, 'src'), {
   maxAge: '1h',
   etag: true

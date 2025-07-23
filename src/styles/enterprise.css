@@ -8,40 +8,28 @@
     --tg-theme-link-color: #2481cc;
     --tg-theme-button-color: #2481cc;
     --tg-theme-button-text-color: #ffffff;
-    --tg-theme-secondary-bg-color: #f0f0f0;
-    --tg-theme-header-bg-color: #ffffff;
-    --tg-theme-accent-text-color: #2481cc;
-    --tg-theme-section-bg-color: #ffffff;
-    --tg-theme-section-header-text-color: #6d6d71;
-    --tg-theme-subtitle-text-color: #999999;
-    --tg-theme-destructive-text-color: #ff3b30;
     
     /* Enterprise Design System Variables */
     --border-radius-sm: 4px;
     --border-radius-md: 8px;
     --border-radius-lg: 12px;
-    --border-radius-xl: 16px;
     
     --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
     --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
     --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
-    --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
     
     --spacing-xs: 4px;
     --spacing-sm: 8px;
     --spacing-md: 16px;
     --spacing-lg: 24px;
     --spacing-xl: 32px;
-    --spacing-2xl: 48px;
     
     --z-index-dropdown: 1000;
     --z-index-modal: 1100;
-    --z-index-popover: 1200;
     --z-index-tooltip: 1300;
     
     --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
     --transition-normal: 300ms cubic-bezier(0.4, 0, 0.2, 1);
-    --transition-slow: 500ms cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* Base Styles */
@@ -74,8 +62,7 @@ body {
 }
 
 /* Loading Overlay */
-#loadingOverlay,
-.loading-overlay {
+#loadingOverlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -87,7 +74,7 @@ body {
     justify-content: center;
     align-items: center;
     z-index: var(--z-index-modal);
-    transition: opacity var(--transition-slow) ease;
+    transition: opacity var(--transition-normal) ease;
 }
 
 .spinner {
@@ -122,8 +109,7 @@ body {
 }
 
 /* Error Overlay */
-#errorOverlay,
-.error-overlay {
+#errorOverlay {
     position: fixed;
     top: 0;
     left: 0;
@@ -141,11 +127,10 @@ body {
 .error-icon {
     font-size: 48px;
     margin-bottom: var(--spacing-md);
-    filter: grayscale(1);
 }
 
 .error-title {
-    color: var(--tg-theme-destructive-text-color);
+    color: var(--tg-theme-text-color);
     font-size: 20px;
     font-weight: 700;
     margin-bottom: var(--spacing-sm);
@@ -162,4 +147,86 @@ body {
 }
 
 /* Controls Panel */
-#controls,\n.controls-panel {\n    position: fixed;\n    bottom: var(--spacing-lg);\n    left: var(--spacing-lg);\n    right: var(--spacing-lg);\n    background: rgba(0, 0, 0, 0.1);\n    backdrop-filter: blur(12px);\n    -webkit-backdrop-filter: blur(12px);\n    border-radius: var(--border-radius-lg);\n    padding: var(--spacing-md);\n    display: none;\n    flex-direction: row;\n    justify-content: space-around;\n    gap: var(--spacing-sm);\n    z-index: var(--z-index-dropdown);\n    box-shadow: var(--shadow-lg);\n    border: 1px solid rgba(255, 255, 255, 0.1);\n}\n\n/* Buttons */\n.control-button,\n.retry-button,\n.ui-button {\n    background: var(--tg-theme-button-color);\n    color: var(--tg-theme-button-text-color);\n    border: none;\n    border-radius: var(--border-radius-md);\n    padding: var(--spacing-sm) var(--spacing-md);\n    font-size: 14px;\n    font-weight: 600;\n    cursor: pointer;\n    touch-action: manipulation;\n    transition: all var(--transition-fast);\n    min-height: 44px;\n    display: flex;\n    align-items: center;\n    justify-content: center;\n    position: relative;\n    overflow: hidden;\n}\n\n.control-button:hover,\n.retry-button:hover,\n.ui-button:hover {\n    transform: translateY(-1px);\n    box-shadow: var(--shadow-md);\n}\n\n.control-button:active,\n.retry-button:active,\n.ui-button:active {\n    transform: translateY(0);\n    opacity: 0.8;\n}\n\n.control-button:disabled,\n.retry-button:disabled,\n.ui-button:disabled {\n    opacity: 0.5;\n    cursor: not-allowed;\n    transform: none;\n}\n\n.retry-button {\n    margin-top: var(--spacing-lg);\n    padding: var(--spacing-md) var(--spacing-xl);\n    font-size: 16px;\n    border-radius: var(--border-radius-md);\n}\n\n/* Progress Indicator */\n.progress-indicator {\n    position: fixed;\n    top: var(--spacing-lg);\n    left: var(--spacing-lg);\n    right: var(--spacing-lg);\n    background: var(--tg-theme-bg-color);\n    border-radius: var(--border-radius-md);\n    padding: var(--spacing-md);\n    box-shadow: var(--shadow-md);\n    z-index: var(--z-index-popover);\n    display: none;\n}\n\n.progress-bar {\n    width: 100%;\n    height: 4px;\n    background: var(--tg-theme-hint-color);\n    border-radius: var(--border-radius-sm);\n    overflow: hidden;\n    margin-bottom: var(--spacing-sm);\n}\n\n.progress-fill {\n    height: 100%;\n    background: var(--tg-theme-button-color);\n    width: 0%;\n    transition: width var(--transition-normal);\n    border-radius: var(--border-radius-sm);\n}\n\n.progress-text {\n    font-size: 12px;\n    color: var(--tg-theme-hint-color);\n    text-align: center;\n}\n\n/* Notifications */\n.notifications-container {\n    position: fixed;\n    top: var(--spacing-lg);\n    right: var(--spacing-lg);\n    z-index: var(--z-index-tooltip);\n    pointer-events: none;\n}\n\n.notification {\n    background: var(--tg-theme-bg-color);\n    color: var(--tg-theme-text-color);\n    padding: var(--spacing-md);\n    border-radius: var(--border-radius-md);\n    box-shadow: var(--shadow-lg);\n    margin-bottom: var(--spacing-sm);\n    min-width: 200px;\n    max-width: 300px;\n    font-size: 14px;\n    line-height: 1.4;\n    border-left: 4px solid var(--tg-theme-button-color);\n    transform: translateX(100%);\n    opacity: 0;\n    transition: all var(--transition-normal);\n    pointer-events: auto;\n}\n\n.notification-enter {\n    transform: translateX(0);\n    opacity: 1;\n}\n\n.notification-exit {\n    transform: translateX(100%);\n    opacity: 0;\n}\n\n.notification-info {\n    border-left-color: var(--tg-theme-button-color);\n}\n\n.notification-success {\n    border-left-color: #4CAF50;\n}\n\n.notification-warning {\n    border-left-color: #FF9800;\n}\n\n.notification-error {\n    border-left-color: var(--tg-theme-destructive-text-color);\n}\n\n/* UI Components */\n.ui-slider {\n    display: flex;\n    align-items: center;\n    gap: var(--spacing-sm);\n}\n\n.ui-slider input[type=\"range\"] {\n    flex: 1;\n    -webkit-appearance: none;\n    appearance: none;\n    height: 4px;\n    background: var(--tg-theme-hint-color);\n    border-radius: var(--border-radius-sm);\n    outline: none;\n}\n\n.ui-slider input[type=\"range\"]::-webkit-slider-thumb {\n    -webkit-appearance: none;\n    appearance: none;\n    width: 20px;\n    height: 20px;\n    background: var(--tg-theme-button-color);\n    border-radius: 50%;\n    cursor: pointer;\n    box-shadow: var(--shadow-sm);\n}\n\n.ui-slider input[type=\"range\"]::-moz-range-thumb {\n    width: 20px;\n    height: 20px;\n    background: var(--tg-theme-button-color);\n    border-radius: 50%;\n    cursor: pointer;\n    border: none;\n    box-shadow: var(--shadow-sm);\n}\n\n.ui-toggle {\n    display: flex;\n    align-items: center;\n    gap: var(--spacing-sm);\n}\n\n.ui-toggle input[type=\"checkbox\"] {\n    width: 20px;\n    height: 20px;\n    accent-color: var(--tg-theme-button-color);\n}\n\n/* Utility Classes */\n.hidden {\n    opacity: 0;\n    pointer-events: none;\n}\n\n.sr-only {\n    position: absolute;\n    width: 1px;\n    height: 1px;\n    padding: 0;\n    margin: -1px;\n    overflow: hidden;\n    clip: rect(0, 0, 0, 0);\n    white-space: nowrap;\n    border: 0;\n}\n\n.flex {\n    display: flex;\n}\n\n.flex-col {\n    flex-direction: column;\n}\n\n.items-center {\n    align-items: center;\n}\n\n.justify-center {\n    justify-content: center;\n}\n\n.gap-sm {\n    gap: var(--spacing-sm);\n}\n\n.gap-md {\n    gap: var(--spacing-md);\n}\n\n.gap-lg {\n    gap: var(--spacing-lg);\n}\n\n.p-sm {\n    padding: var(--spacing-sm);\n}\n\n.p-md {\n    padding: var(--spacing-md);\n}\n\n.p-lg {\n    padding: var(--spacing-lg);\n}\n\n.m-sm {\n    margin: var(--spacing-sm);\n}\n\n.m-md {\n    margin: var(--spacing-md);\n}\n\n.m-lg {\n    margin: var(--spacing-lg);\n}\n\n.text-center {\n    text-align: center;\n}\n\n.text-sm {\n    font-size: 12px;\n}\n\n.text-md {\n    font-size: 14px;\n}\n\n.text-lg {\n    font-size: 16px;\n}\n\n.text-xl {\n    font-size: 20px;\n}\n\n.font-semibold {\n    font-weight: 600;\n}\n\n.font-bold {\n    font-weight: 700;\n}\n\n/* Responsive Design */\n@media (max-width: 768px) {\n    :root {\n        --spacing-md: 12px;\n        --spacing-lg: 16px;\n        --spacing-xl: 24px;\n    }\n    \n    #controls,\n    .controls-panel {\n        bottom: var(--spacing-md);\n        left: var(--spacing-md);\n        right: var(--spacing-md);\n        padding: var(--spacing-sm);\n    }\n    \n    .control-button {\n        font-size: 12px;\n        padding: var(--spacing-xs) var(--spacing-sm);\n        min-height: 40px;\n    }\n    \n    .loading-text {\n        font-size: 16px;\n    }\n    \n    .error-title {\n        font-size: 18px;\n    }\n}\n\n@media (max-width: 480px) {\n    .error-message {\n        max-width: 280px;\n    }\n    \n    .notification {\n        min-width: 180px;\n        max-width: 280px;\n    }\n}\n\n/* Dark Mode Support */\n@media (prefers-color-scheme: dark) {\n    :root {\n        --tg-theme-bg-color: #1a1a1a;\n        --tg-theme-text-color: #ffffff;\n        --tg-theme-hint-color: #666666;\n        --tg-theme-secondary-bg-color: #2a2a2a;\n    }\n}\n\n/* High Contrast Mode */\n@media (prefers-contrast: high) {\n    .control-button,\n    .retry-button,\n    .ui-button {\n        border: 2px solid currentColor;\n    }\n    \n    .notification {\n        border: 1px solid currentColor;\n    }\n}\n\n/* Reduced Motion */\n@media (prefers-reduced-motion: reduce) {\n    *,\n    *::before,\n    *::after {\n        animation-duration: 0.01ms !important;\n        animation-iteration-count: 1 !important;\n        transition-duration: 0.01ms !important;\n    }\n    \n    .spinner {\n        animation: none;\n        border-top-color: var(--tg-theme-button-color);\n    }\n}
+#controls {
+    position: fixed;
+    bottom: var(--spacing-lg);
+    left: var(--spacing-lg);
+    right: var(--spacing-lg);
+    background: rgba(0, 0, 0, 0.1);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-radius: var(--border-radius-lg);
+    padding: var(--spacing-md);
+    display: none;
+    flex-direction: row;
+    justify-content: space-around;
+    gap: var(--spacing-sm);
+    z-index: var(--z-index-dropdown);
+    box-shadow: var(--shadow-lg);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Buttons */
+.control-button,
+.retry-button {
+    background: var(--tg-theme-button-color);
+    color: var(--tg-theme-button-text-color);
+    border: none;
+    border-radius: var(--border-radius-md);
+    padding: var(--spacing-sm) var(--spacing-md);
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    touch-action: manipulation;
+    transition: all var(--transition-fast);
+    min-height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.control-button:hover,
+.retry-button:hover {
+    transform: translateY(-1px);
+    box-shadow: var(--shadow-md);
+}
+
+.control-button:active,
+.retry-button:active {
+    transform: translateY(0);
+    opacity: 0.8;
+}
+
+.retry-button {
+    margin-top: var(--spacing-lg);
+    padding: var(--spacing-md) var(--spacing-xl);
+    font-size: 16px;
+}
+
+/* Utility Classes */
+.hidden {
+    opacity: 0;
+    pointer-events: none;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    :root {
+        --spacing-md: 12px;
+        --spacing-lg: 16px;
+        --spacing-xl: 24px;
+    }
+    
+    #controls {
+        bottom: var(--spacing-md);
+        left: var(--spacing-md);
+        right: var(--spacing-md);
+        padding: var(--spacing-sm);
+    }
+    
+    .control-button {
+        font-size: 12px;
+        padding: var(--spacing-xs) var(--spacing-sm);
+        min-height: 40px;
+    }
+}
