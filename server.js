@@ -20,7 +20,15 @@ app.use(helmet({
   contentSecurityPolicy: {
     directives: {
       defaultSrc: ["'self'"],
-      scriptSrc: ["'self'", "'unsafe-inline'", "https://telegram.org", "https://cdn.babylonjs.com"],
+      scriptSrc: [
+        "'self'", 
+        "'unsafe-inline'", 
+        "https://telegram.org",
+        "https://unpkg.com",
+        "https://cdn.jsdelivr.net",
+        "https://cdnjs.cloudflare.com", 
+        "https://threejs.org"
+      ],
       styleSrc: ["'self'", "'unsafe-inline'"],
       imgSrc: ["'self'", "data:", "blob:"],
       connectSrc: ["'self'", "blob:"],
@@ -34,7 +42,7 @@ app.use(helmet({
 // Compression middleware
 app.use(compression());
 
-// Serve static files
+// Serve static files from public directory
 app.use(express.static(path.join(__dirname, 'public'), {
   maxAge: '1d',
   etag: true
@@ -54,6 +62,79 @@ app.get('/health', (req, res) => {
     app_url: BOT_CONFIG.baseUrl
   });
 });
+
+// Assets directory listing function
+function getAssetsListing(req, res) {
+  const fs = require('fs');
+  const assetsPath = path.join(__dirname, 'assets');
+  
+  try {
+    function getDirectoryContents(dirPath, relativePath = '') {
+      const items = fs.readdirSync(dirPath, { withFileTypes: true });
+      const contents = [];
+      
+      for (const item of items) {
+        const itemPath = path.join(dirPath, item.name);
+        const relativeItemPath = path.join(relativePath, item.name).replace(/\\/g, '/');
+        
+        if (item.isDirectory()) {
+          contents.push({
+            name: item.name,
+            type: 'directory',
+            path: `/assets/${relativeItemPath}`,
+            children: getDirectoryContents(itemPath, relativeItemPath)
+          });
+        } else {
+          const stats = fs.statSync(itemPath);
+          contents.push({
+            name: item.name,
+            type: 'file',
+            path: `/assets/${relativeItemPath}`,
+            size: stats.size,
+            modified: stats.mtime.toISOString()
+          });
+        }
+      }
+      
+      return contents;
+    }
+    
+    const contents = getDirectoryContents(assetsPath);
+    
+    res.json({
+      path: '/assets',
+      contents: contents,
+      total_files: contents.filter(item => item.type === 'file').length,
+      total_directories: contents.filter(item => item.type === 'directory').length
+    });
+  } catch (error) {
+    res.status(500).json({ 
+      error: 'Failed to read assets directory',
+      message: error.message 
+    });
+  }
+}
+
+// Assets directory listing endpoints (handle both with and without trailing slash)
+app.get('/assets', getAssetsListing);
+app.get('/assets/', getAssetsListing);
+
+// Serve assets directory for .ply files, textures, models, etc.
+// This comes after the listing endpoints so they take precedence
+app.use('/assets', express.static(path.join(__dirname, 'assets'), {
+  maxAge: '7d', // Cache assets longer since they change less frequently
+  etag: true,
+  // Add proper MIME types for 3D files
+  setHeaders: (res, filePath) => {
+    if (filePath.endsWith('.ply')) {
+      res.setHeader('Content-Type', 'application/octet-stream');
+    } else if (filePath.endsWith('.splat')) {
+      res.setHeader('Content-Type', 'application/octet-stream');
+    } else if (filePath.endsWith('.glb') || filePath.endsWith('.gltf')) {
+      res.setHeader('Content-Type', 'model/gltf-binary');
+    }
+  }
+}));
 
 // Webhook endpoint for Telegram bot (optional)
 app.post('/webhook', express.json(), (req, res) => {

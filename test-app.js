@@ -48,7 +48,9 @@ async function runTests() {
         { path: '/', expected: 'Three.js' },
         { path: '/', expected: 'initThreeJS' },
         { path: '/', expected: 'OrbitControls' },
-        { path: '/', expected: 'Gaussian Splat' }
+        { path: '/', expected: 'Gaussian Splat' },
+        { path: '/assets', expected: 'contents' },
+        { path: '/assets/test.txt', expected: 'test file' }
     ];
     
     let passed = 0;

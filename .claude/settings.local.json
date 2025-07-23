@@ -12,7 +12,9 @@
       "Bash(curl:*)",
       "Bash(rm:*)",
       "Bash(npm install)",
-      "Bash(git push:*)"
+      "Bash(git push:*)",
+      "Bash(mkdir:*)",
+      "Bash(./run-tests.sh:*)"
     ],
     "deny": []
   }

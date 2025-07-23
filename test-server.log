@@ -1,0 +1,8 @@
+
+> telegram-gaussian-splat-viewer@1.0.0 start
+> node server.js
+
+Telegram Gaussian Splat Viewer running on port 3000
+Access at: http://localhost:3000
+⚠️  TG_TOKEN not set - bot features disabled
+   Set TG_TOKEN environment variable to enable bot integration
