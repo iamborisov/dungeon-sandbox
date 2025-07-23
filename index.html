@@ -1,1 +1,34 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no"><title>TGSplat Enterprise - Gaussian Splat Viewer</title><script src="https://telegram.org/js/telegram-web-app.js"></script><script defer="defer" src="/dist/runtime.9bdb3e6829e184443b17.js"></script><script defer="defer" src="/dist/three.1c6e90fd5876fcdbc9cd.js"></script><script defer="defer" src="/dist/modules.07a0f7ec1e8b60dcf143.js"></script><script defer="defer" src="/dist/app.9c4d8a5cd648f8b569de.js"></script><link href="/dist/app.0ea7eda0f4a1b83f0f4d.css" rel="stylesheet"></head><body><div id="loadingOverlay"><div class="spinner"></div><div class="loading-text">Loading Gaussian Splat...</div><div class="loading-hint">Preparing enterprise 3D viewer for optimal experience</div></div><div id="errorOverlay"><div class="error-icon">⚠️</div><div class="error-title">Unable to Load Application</div><div class="error-message" id="errorMessage">Failed to initialize the 3D viewer. Please check your connection and try again.</div><button class="retry-button" id="retryButton">Try Again</button></div><canvas id="renderCanvas"></canvas><div id="controls"><button class="control-button" id="resetCameraButton">Reset View</button> <button class="control-button" id="toggleQualityButton">Quality</button></div></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+    <title>TGSplat Enterprise - Gaussian Splat Viewer</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+    <script defer="defer" src="/dist/runtime.9bdb3e6829e184443b17.js"></script>
+    <script defer="defer" src="/dist/three.d8182d977703c4c09c75.js"></script>
+    <script defer="defer" src="/dist/modules.07a0f7ec1e8b60dcf143.js"></script>
+    <script defer="defer" src="/dist/app.1f34e8e50717cfb1f032.js"></script>
+    <link href="/dist/app.0ea7eda0f4a1b83f0f4d.css" rel="stylesheet">
+</head>
+<body>
+<div id="loadingOverlay">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Gaussian Splat...</div>
+    <div class="loading-hint">Preparing enterprise 3D viewer for optimal experience</div>
+</div>
+<div id="errorOverlay">
+    <div class="error-icon">⚠️</div>
+    <div class="error-title">Unable to Load Application</div>
+    <div class="error-message" id="errorMessage">Failed to initialize the 3D viewer. Please check your connection and
+        try again.
+    </div>
+    <button class="retry-button" id="retryButton">Try Again</button>
+</div>
+<canvas id="renderCanvas"></canvas>
+<div id="controls">
+    <button class="control-button" id="resetCameraButton">Reset View</button>
+    <button class="control-button" id="toggleQualityButton">Quality</button>
+</div>
+</body>
+</html>

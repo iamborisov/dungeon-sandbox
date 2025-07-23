@@ -2,6 +2,8 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { OBJLoader } from 'three/addons/loaders/OBJLoader.js';
 
 // Import Enterprise Styles
 import './styles/enterprise.css';
@@ -22,6 +24,8 @@ import './modules/PerformanceModule.js';
 window.THREE = THREE;
 window.THREE.OrbitControls = OrbitControls;
 window.THREE.PLYLoader = PLYLoader;
+window.THREE.GLTFLoader = GLTFLoader;
+window.THREE.OBJLoader = OBJLoader;
 
 class TGSplatApp {
     constructor() {
