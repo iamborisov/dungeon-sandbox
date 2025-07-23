@@ -399,7 +399,7 @@
                 // Create orbit controls for mobile-optimized interaction
                 controls = new THREE.OrbitControls(camera, renderer.domElement);
                 
-                // Mobile-optimized control settings
+                // Control settings for both mobile and desktop
                 controls.enableDamping = true;
                 controls.dampingFactor = 0.05;
                 controls.screenSpacePanning = false;
@@ -410,11 +410,23 @@
                 controls.maxPolarAngle = Math.PI * 0.9;
                 controls.minPolarAngle = Math.PI * 0.1;
                 
+                // Mouse controls for desktop
+                controls.mouseButtons = {
+                    LEFT: THREE.MOUSE.ROTATE,
+                    MIDDLE: THREE.MOUSE.DOLLY,
+                    RIGHT: THREE.MOUSE.PAN
+                };
+                
                 // Touch settings for mobile
                 controls.touches = {
                     ONE: THREE.TOUCH.ROTATE,
                     TWO: THREE.TOUCH.DOLLY_PAN
                 };
+                
+                // Enable all interaction types
+                controls.enableRotate = true;
+                controls.enableZoom = true;
+                controls.enablePan = true;
                 
                 // Auto-rotate for demo (optional)
                 controls.autoRotate = false;
