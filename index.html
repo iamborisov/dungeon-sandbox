@@ -8,70 +8,10 @@
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Import Map for Three.js ES Modules -->
-    <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
-            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
-        }
-    }
-    </script>
-    
-    <!-- Load Three.js and modules as ES modules -->
-    <script type="module">
-        import * as THREE from 'three';
-        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
-        import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
-        
-        // Make THREE available globally
-        window.THREE = THREE;
-        window.THREE.OrbitControls = OrbitControls;
-        window.THREE.PLYLoader = PLYLoader;
-        
-        console.log('✅ THREE.js loaded successfully, version:', THREE.REVISION);
-        console.log('✅ OrbitControls and PLYLoader loaded successfully');
-        
-        // Trigger the app initialization
-        window.dispatchEvent(new Event('threejs-ready'));
-    </script>
-    <!-- App initialization -->
-    <script>
-        // Wait for Three.js to be ready
-        window.addEventListener('threejs-ready', function() {
-            console.log('THREE.js modules ready, initializing app...');
-            initializeApp();
-        });
-        
-        // Fallback in case ES modules aren't supported
-        window.addEventListener('load', function() {
-            // Give ES modules time to load
-            setTimeout(() => {
-                if (typeof THREE === 'undefined') {
-                    console.warn('ES modules failed, loading legacy Three.js...');
-                    loadLegacyThreeJS();
-                }
-            }, 1000);
-        });
-        
-        function loadLegacyThreeJS() {
-            const script = document.createElement('script');
-            script.src = 'https://unpkg.com/three@0.158.0/build/three.min.js';
-            script.onload = function() {
-                console.log('Legacy THREE.js loaded successfully, version:', THREE.REVISION);
-                
-                // Load OrbitControls
-                const controlsScript = document.createElement('script');
-                controlsScript.src = 'https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js';
-                controlsScript.onload = function() {
-                    console.log('Legacy OrbitControls loaded');
-                    initializeApp();
-                };
-                document.head.appendChild(controlsScript);
-            };
-            document.head.appendChild(script);
-        }
-    </script>
+    <!-- Three.js CDN - Latest Version -->
+    <script src="https://unpkg.com/three@latest/build/three.min.js"></script>
+    <script src="https://unpkg.com/three@latest/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://unpkg.com/three@latest/examples/js/loaders/PLYLoader.js"></script>
     
     <style>
         :root {
@@ -721,16 +661,17 @@
             tg.MainButton.show();
         }
         
-        // Main app initialization function
-        function initializeApp() {
-            if (typeof THREE !== 'undefined' && (THREE.OrbitControls || window.THREE.OrbitControls)) {
-                console.log('THREE.js and all modules ready, initializing...');
-                initThreeJS();
-            } else {
-                console.log('THREE.js modules not ready, retrying...');
-                setTimeout(initializeApp, 200);
-            }
-        }
+        // Initialize when page loads
+        window.addEventListener('load', () => {
+            setTimeout(() => {
+                if (typeof THREE !== 'undefined') {
+                    console.log('THREE.js loaded, initializing...');
+                    initThreeJS();
+                } else {
+                    console.error('THREE.js failed to load');
+                }
+            }, 100);
+        });
         
         // Handle page visibility changes for performance
         document.addEventListener('visibilitychange', () => {
