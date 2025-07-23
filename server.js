@@ -48,6 +48,12 @@ app.use(express.static(path.join(__dirname, 'public'), {
   etag: true
 }));
 
+// Serve src directory for modular architecture
+app.use('/src', express.static(path.join(__dirname, 'src'), {
+  maxAge: '1h',
+  etag: true
+}));
+
 // Serve the main page
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, 'index.html'));

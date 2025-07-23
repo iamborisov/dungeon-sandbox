@@ -17,7 +17,9 @@
       "Bash(./run-tests.sh:*)",
       "Bash(npm start)",
       "WebFetch(domain:unpkg.com)",
-      "WebFetch(domain:app.unpkg.com)"
+      "WebFetch(domain:app.unpkg.com)",
+      "Bash(pkill:*)",
+      "Bash(timeout 5s npm start)"
     ],
     "deny": []
   }
