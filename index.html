@@ -16,27 +16,15 @@
         window.addEventListener('load', async function() {
             if (typeof THREE !== 'undefined') {
                 try {
-                    // Import OrbitControls as ES6 module
-                    const { OrbitControls } = await import('https://unpkg.com/three@0.158.0/examples/jsm/controls/OrbitControls.js');
-                    THREE.OrbitControls = OrbitControls;
+                    // Use script loading instead of ES6 imports for better compatibility
+                    await loadScript('https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js');
                     console.log('✅ OrbitControls loaded successfully');
                     
-                    // Import PLYLoader as ES6 module
-                    const { PLYLoader } = await import('https://unpkg.com/three@0.158.0/examples/jsm/loaders/PLYLoader.js');
-                    THREE.PLYLoader = PLYLoader;
+                    await loadScript('https://unpkg.com/three@0.158.0/examples/js/loaders/PLYLoader.js');
                     console.log('✅ PLYLoader loaded successfully');
                     
                 } catch (error) {
-                    console.warn('Failed to load Three.js modules:', error);
-                    
-                    // Fallback to legacy script loading
-                    try {
-                        await loadScript('https://threejs.org/examples/js/controls/OrbitControls.js');
-                        await loadScript('https://threejs.org/examples/js/loaders/PLYLoader.js');
-                        console.log('✅ Fallback scripts loaded');
-                    } catch (fallbackError) {
-                        console.error('All loading methods failed:', fallbackError);
-                    }
+                    console.error('Failed to load Three.js modules:', error);
                 }
             }
         });
@@ -271,7 +259,11 @@
         if (tg) {
             tg.ready();
             tg.expand();
-            tg.disableVerticalSwipes();
+            
+            // Only use swipe controls if supported
+            if (tg.version >= 6.1 && tg.disableVerticalSwipes) {
+                tg.disableVerticalSwipes();
+            }
             
             // Apply Telegram theme colors
             document.documentElement.style.setProperty('--tg-theme-bg-color', tg.themeParams.bg_color || '#ffffff');
@@ -280,10 +272,12 @@
             document.documentElement.style.setProperty('--tg-theme-button-color', tg.themeParams.button_color || '#2481cc');
             document.documentElement.style.setProperty('--tg-theme-button-text-color', tg.themeParams.button_text_color || '#ffffff');
             
-            // Handle back button
-            tg.BackButton.onClick(() => {
-                tg.close();
-            });
+            // Handle back button only if supported
+            if (tg.version >= 6.1 && tg.BackButton) {
+                tg.BackButton.onClick(() => {
+                    tg.close();
+                });
+            }
         }
         
         // Global variables
