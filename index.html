@@ -8,59 +8,69 @@
     <!-- Telegram Web App Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     
-    <!-- Three.js CDN - Using proven working URLs -->
-    <script src="https://unpkg.com/three@0.158.0/build/three.min.js"></script>
-    <!-- Load controls and loaders after THREE.js is available -->
+    <!-- Import Map for Three.js ES Modules -->
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://unpkg.com/three@0.158.0/build/three.module.js",
+            "three/addons/": "https://unpkg.com/three@0.158.0/examples/jsm/"
+        }
+    }
+    </script>
+    
+    <!-- Load Three.js and modules as ES modules -->
+    <script type="module">
+        import * as THREE from 'three';
+        import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+        import { PLYLoader } from 'three/addons/loaders/PLYLoader.js';
+        
+        // Make THREE available globally
+        window.THREE = THREE;
+        window.THREE.OrbitControls = OrbitControls;
+        window.THREE.PLYLoader = PLYLoader;
+        
+        console.log('✅ THREE.js loaded successfully, version:', THREE.REVISION);
+        console.log('✅ OrbitControls and PLYLoader loaded successfully');
+        
+        // Trigger the app initialization
+        window.dispatchEvent(new Event('threejs-ready'));
+    </script>
+    <!-- App initialization -->
     <script>
-        // Load OrbitControls and PLYLoader dynamically
-        window.addEventListener('load', async function() {
-            if (typeof THREE !== 'undefined') {
-                try {
-                    // Use script loading instead of ES6 imports for better compatibility
-                    await loadScript('https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js');
-                    console.log('✅ OrbitControls loaded successfully');
-                    
-                    await loadScript('https://unpkg.com/three@0.158.0/examples/js/loaders/PLYLoader.js');
-                    console.log('✅ PLYLoader loaded successfully');
-                    
-                } catch (error) {
-                    console.error('Failed to load Three.js modules:', error);
-                }
-            }
+        // Wait for Three.js to be ready
+        window.addEventListener('threejs-ready', function() {
+            console.log('THREE.js modules ready, initializing app...');
+            initializeApp();
         });
         
-        function loadScript(src) {
-            return new Promise((resolve, reject) => {
-                const script = document.createElement('script');
-                script.src = src;
-                script.onload = resolve;
-                script.onerror = reject;
-                document.head.appendChild(script);
-            });
-        }
-    </script>
-    <!-- Fallback verification -->
-    <script>
+        // Fallback in case ES modules aren't supported
         window.addEventListener('load', function() {
-            if (typeof THREE === 'undefined') {
-                console.error('THREE.js failed to load from primary CDN, trying fallback...');
-                
-                // Try fallback CDN
-                const fallbackScript = document.createElement('script');
-                fallbackScript.src = 'https://threejs.org/build/three.min.js';
-                fallbackScript.onload = function() {
-                    console.log('THREE.js loaded from fallback CDN');
-                    
-                    // Load controls from fallback
-                    const controlsScript = document.createElement('script');
-                    controlsScript.src = 'https://threejs.org/examples/js/controls/OrbitControls.js';
-                    document.head.appendChild(controlsScript);
-                };
-                document.head.appendChild(fallbackScript);
-            } else {
-                console.log('THREE.js loaded successfully, version:', THREE.REVISION);
-            }
+            // Give ES modules time to load
+            setTimeout(() => {
+                if (typeof THREE === 'undefined') {
+                    console.warn('ES modules failed, loading legacy Three.js...');
+                    loadLegacyThreeJS();
+                }
+            }, 1000);
         });
+        
+        function loadLegacyThreeJS() {
+            const script = document.createElement('script');
+            script.src = 'https://unpkg.com/three@0.158.0/build/three.min.js';
+            script.onload = function() {
+                console.log('Legacy THREE.js loaded successfully, version:', THREE.REVISION);
+                
+                // Load OrbitControls
+                const controlsScript = document.createElement('script');
+                controlsScript.src = 'https://unpkg.com/three@0.158.0/examples/js/controls/OrbitControls.js';
+                controlsScript.onload = function() {
+                    console.log('Legacy OrbitControls loaded');
+                    initializeApp();
+                };
+                document.head.appendChild(controlsScript);
+            };
+            document.head.appendChild(script);
+        }
     </script>
     
     <style>
@@ -711,23 +721,16 @@
             tg.MainButton.show();
         }
         
-        // Initialize when page loads - wait for THREE.js and modules to be available
-        function waitForThreeJS() {
-            if (typeof THREE !== 'undefined' && THREE.OrbitControls && THREE.PLYLoader) {
+        // Main app initialization function
+        function initializeApp() {
+            if (typeof THREE !== 'undefined' && (THREE.OrbitControls || window.THREE.OrbitControls)) {
                 console.log('THREE.js and all modules ready, initializing...');
                 initThreeJS();
-            } else if (typeof THREE !== 'undefined') {
-                console.log('THREE.js loaded, waiting for modules...');
-                setTimeout(waitForThreeJS, 200);
             } else {
-                console.log('Waiting for THREE.js to load...');
-                setTimeout(waitForThreeJS, 100);
+                console.log('THREE.js modules not ready, retrying...');
+                setTimeout(initializeApp, 200);
             }
         }
-        
-        window.addEventListener('load', () => {
-            setTimeout(waitForThreeJS, 100);
-        });
         
         // Handle page visibility changes for performance
         document.addEventListener('visibilitychange', () => {
