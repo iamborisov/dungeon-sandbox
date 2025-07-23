@@ -21,7 +21,10 @@
       "Bash(pkill:*)",
       "Bash(timeout 5s npm start)",
       "Bash(npm run build:*)",
-      "Bash(true)"
+      "Bash(true)",
+      "Bash(npm run clean:*)",
+      "Bash(npm run postinstall:*)",
+      "Bash(npm run deploy:*)"
     ],
     "deny": []
   }

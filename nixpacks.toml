@@ -5,7 +5,7 @@ nixPkgs = ['nodejs-18_x', 'npm-9_x']
 cmds = ['npm install --omit=dev']
 
 [phases.build]
-cmds = ['echo "No build step required for this project"']
+cmds = ['npm build']
 
 [start]
 cmd = 'npm start'
